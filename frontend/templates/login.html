@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Elderly Care App - Login</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body{
+            background: linear-gradient(135deg, #EAF7F6, #D9EEF2);
+            display:flex;
+            justify-content:right;
+            align-items:center;
+            min-height:100vh;
+            padding:20px;
+        }
+
+        .container{
+            width: 100%;
+            max-width:450px;
+        }
+
+        .login-card{
+            background:white;
+            border-radius:28px;
+            padding:40px 35px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.08);
+            text-align:center;
+        }
+
+        .logo-circle{
+            width:90px;
+            height:90px;
+            background:#D7F0EE;
+            border-radius:50%;
+            margin:0 auto 20px;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-size:40px;
+        }
+
+        h1{
+            font-size:2rem;
+            color:#1F4E5F;
+            margin-bottom:8px;
+        }
+
+        .subtitle{
+            color:#5F7A82;
+            margin-bottom:35px;
+            font-size:1rem;
+            line-height:1.5;
+        }
+
+        .input-group{
+            text-align:left;
+            margin-bottom:20px;
+        }
+
+        label{
+            display:block;
+            margin-bottom:8px;
+            font-size:1rem;
+            color:#35545D;
+            font-weight:600;
+        }
+
+        input{
+            width:100%;
+            padding:18px;
+            border:2px solid #DCEBED;
+            border-radius:16px;
+            font-size:1.05rem;
+            background:#F9FCFD;
+            outline:none;
+            transition:0.3s;
+        }
+
+        input:focus{
+            border-color:#74C7C5;
+            background:white;
+        }
+
+        .forgot-password{
+            display:flex;
+            justify-content:flex-end;
+            margin-bottom:25px;
+        }
+
+        .forgot-password a{
+            text-decoration:none;
+            color:#5BA6A4;
+            font-weight:600;
+        }
+
+        .login-btn{
+            width:100%;
+            padding:18px;
+            border:none;
+            border-radius:18px;
+            background:#5BA6A4;
+            color:white;
+            font-size:1.15rem;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .login-btn:hover{
+            transform:translateY(-2px);
+            background:#4A9492;
+        }
+
+        .divider{
+            margin:28px 0 22px;
+            color:#7D9097;
+            font-size:0.95rem;
+        }
+
+        .signup-btn{
+            width:20%;
+            padding:16px;
+            border:2px solid #B9DFE0;
+            border-radius:18px;
+            background:#F4FBFB;
+            color:#347A79;
+            font-size:1rem;
+            font-weight:600;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .signup-btn:hover{
+            background:#EAF7F6;
+        }
+
+        @media(max-width:480px){
+            .login-card{
+                padding:30px 25px;
+            }
+
+            h1{
+                font-size:1.8rem;
+            }
+
+            input,
+            .login-btn,
+            .signup-btn{
+                font-size:1rem;
+                padding:16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="login-card">
+
+            <div class="logo-circle"></div>
+
+            <h1>Welcome Back</h1>
+            <p class="subtitle">
+                Sign in to continue using your elderly care assistant
+            </p>
+
+            <form>
+
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+
+                <div class="forgot-password">
+                    <a href="#">Forgot password?</a>
+                </div>
+
+                <button class="login-btn" type="submit">
+                    Log In
+                </button>
+
+            </form>
+
+            <div class="divider">
+                Don’t have an account? Sign Up <button class = signup-btn>Here</button>
+            </div>
+
+
+        </div>
+    </div>
+
+</body>
+</html>
