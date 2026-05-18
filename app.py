@@ -65,6 +65,21 @@ def signup_user():
         password=hashed_password
     )
 
+    if len(password) < 8:
+        return "Password must be longer than 8 characters."
+    
+    if not any(char.isupper() for char in password):
+        return "Password must include at least 1 capital letter."
+    
+    if not any(char.islower() for char in password):
+        return "Password must include at least 1 lowercase letter."
+    
+    if not any(char in "!@#$%^&*()-_=+[]|;:',.<>?/" for char in password):
+        return "Password must include at least 1 special character."
+    
+    if not any(char.isdigit() for char in password):
+        return "Password must include at least 1 number."
+
     db.session.add(user)
     db.session.commit()
 
