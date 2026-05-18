@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 #hashing
 from werkzeug.security import generate_password_hash, check_password_hash
+#email validation
+import re
 
 app = Flask(
     __name__,
@@ -58,15 +60,14 @@ def signup_user():
     if password != confirm_password:
         return "Password not matching, please check your password."
 
-    hashed_password = generate_password_hash(password)
-    
-    user = User(
-        email=email,
-        password=hashed_password
-    )
+    #check if correct email format
+    email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    if not re.match(email_pattern, email):
+        return "Invalid email format."
 
+    #check if strong password
     if len(password) < 8:
-        return "Password must be longer than 8 characters."
+        return "Password must be at least 8 characters."
     
     if not any(char.isupper() for char in password):
         return "Password must include at least 1 capital letter."
@@ -79,6 +80,13 @@ def signup_user():
     
     if not any(char.isdigit() for char in password):
         return "Password must include at least 1 number."
+
+    hashed_password = generate_password_hash(password)
+    
+    user = User(
+        email=email,
+        password=hashed_password
+    )
 
     db.session.add(user)
     db.session.commit()
