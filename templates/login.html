@@ -152,8 +152,8 @@
             }
 
             input,
-            .login-btn,
-            .signup-btn{
+            .login_btn,
+            .signup_btn{
                 font-size:1rem;
                 padding:16px;
             }
@@ -184,9 +184,10 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" placeholder="Enter your password" required>
                 </div>
-
                 <div class="forgot-password">
-                    <a href="#">Forgot password?</a>
+                    <a href="/forgot_password">
+                        Forgot password?
+                    </a>
                 </div>
 
                 <button class="login-btn" type="submit">
@@ -196,7 +197,13 @@
             </form>
 
             <div class="divider">
-                Don’t have an account? Sign Up <button class = signup-btn>Here</button>
+                Don't have an account? Sign Up
+
+                <a href="/signup">
+                    <button class="signup-btn" type="button">
+                        Here
+                    </button>
+                </a>
             </div>
 
 
