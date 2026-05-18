@@ -166,21 +166,21 @@
                 Create your account to begin using your elderly care assistant
             </p>
 
-            <form>
+            <form action="/signup_user" method="POST">
 
                 <div class="input-group">
                     <label for="fullname">Full Name</label>
-                    <input type="text" id="fullname" placeholder="Enter your full name" required>
+                    <input type="text" id="fullname" name="fullname" placeholder="Enter your full name" required>
                 </div>
 
                 <div class="input-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" placeholder="Enter your email" required>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
                 </div>
 
                 <div class="input-group">
                     <label for="password">Create Password</label>
-                    <input type="password" id="password" placeholder="Create a password" required>
+                    <input type="password" id="password" name="password" placeholder="Create a password" required>
                 </div>
 
                 <div class="input-group">
