@@ -1,6 +1,9 @@
 from flask import Flask, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 
+#hashing
+from werkzeug.security import generate_password_hash, check_password_hash
+
 app = Flask(
     __name__,
     template_folder='templates'
@@ -16,7 +19,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
 
 with app.app_context():
     db.create_all()
@@ -45,15 +48,21 @@ def signup_user():
 
     email = request.form['email']
     password = request.form['password']
+    confirm_password = request.form['confirm_password']
 
     existing_user = User.query.filter_by(email=email).first()
 
     if existing_user:
         return "Email already registered."
+    
+    if password != confirm_password:
+        return "Password not matching, please check your password."
 
+    hashed_password = generate_password_hash(password)
+    
     user = User(
         email=email,
-        password=password
+        password=hashed_password
     )
 
     db.session.add(user)
@@ -68,14 +77,11 @@ def login_user():
     email = request.form['email']
     password = request.form['password']
 
-    user = User.query.filter_by(
-        email=email,
-        password=password
-    ).first()
+    user = User.query.filter_by(email=email).first()
 
-    if user:
+    if user and check_password_hash(user.password, password):
         return redirect(url_for('homepage'))
-
+        
     return "Invalid email or password"
 
 
