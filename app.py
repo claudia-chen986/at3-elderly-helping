@@ -45,10 +45,17 @@ def forgot_password():
 def homepage():
     return render_template('homepage.html')
 
+@app.route('/daily_tasks')
+def daily_tasks():
+    return "Daily Tasks Page Coming Soon"
+
+
+@app.route('/journal')
+def journal():
+    return "Journal Page Coming Soon"
 
 
 #sign up user route
-@app.route('/signup_user', methods=['POST'])
 @app.route('/signup_user', methods=['POST'])
 def signup_user():
 
