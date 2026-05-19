@@ -1,10 +1,13 @@
 from flask import Flask, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 
-#hashing
-from werkzeug.security import generate_password_hash, check_password_hash
-#email validation
-import re
+#authentication imports
+from authentication import (
+    validate_email,
+    validate_password,
+    hash_password,
+    verify_password
+)
 
 app = Flask(
     __name__,
@@ -46,6 +49,7 @@ def homepage():
 
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
+@app.route('/signup_user', methods=['POST'])
 def signup_user():
 
     email = request.form['email']
@@ -56,33 +60,23 @@ def signup_user():
 
     if existing_user:
         return "Email already registered."
-    
+
     if password != confirm_password:
         return "Password not matching, please check your password."
 
-    #check if correct email format
-    email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-    if not re.match(email_pattern, email):
-        return "Invalid email format."
+    # Validate email
+    email_error = validate_email(email)
+    if email_error:
+        return email_error
 
-    #check if strong password
-    if len(password) < 8:
-        return "Password must be at least 8 characters."
-    
-    if not any(char.isupper() for char in password):
-        return "Password must include at least 1 capital letter."
-    
-    if not any(char.islower() for char in password):
-        return "Password must include at least 1 lowercase letter."
-    
-    if not any(char in "!@#$%^&*()-_=+[]|;:',.<>?/" for char in password):
-        return "Password must include at least 1 special character."
-    
-    if not any(char.isdigit() for char in password):
-        return "Password must include at least 1 number."
+    # Validate password
+    password_error = validate_password(password)
+    if password_error:
+        return password_error
 
-    hashed_password = generate_password_hash(password)
-    
+    # Hash password
+    hashed_password = hash_password(password)
+
     user = User(
         email=email,
         password=hashed_password
@@ -102,9 +96,9 @@ def login_user():
 
     user = User.query.filter_by(email=email).first()
 
-    if user and check_password_hash(user.password, password):
+    if user and verify_password(user.password, password):
         return redirect(url_for('homepage'))
-        
+
     return "Invalid email or password"
 
 
