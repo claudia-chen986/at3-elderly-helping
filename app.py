@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 
 #authentication imports
@@ -14,6 +14,7 @@ app = Flask(
     template_folder='templates'
 )
 
+app.secret_key = 'my_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -23,6 +24,7 @@ db = SQLAlchemy(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
@@ -43,7 +45,23 @@ def forgot_password():
 
 @app.route('/homepage')
 def homepage():
-    return render_template('homepage.html')
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.get(session['user_id'])
+
+    return render_template(
+        'homepage.html',
+        user_name=user.name
+    )
+
+@app.route('/logout')
+def logout():
+
+    session.clear()
+
+    return redirect(url_for('login'))
 
 @app.route('/daily_tasks')
 def daily_tasks():
@@ -59,6 +77,7 @@ def journal():
 @app.route('/signup_user', methods=['POST'])
 def signup_user():
 
+    name = request.form['fullname']
     email = request.form['email']
     password = request.form['password']
     confirm_password = request.form['confirm_password']
@@ -85,12 +104,15 @@ def signup_user():
     hashed_password = hash_password(password)
 
     user = User(
+        name=name,
         email=email,
         password=hashed_password
     )
 
     db.session.add(user)
     db.session.commit()
+
+    session['user_id'] = user.id
 
     return redirect(url_for('homepage'))
     
@@ -104,6 +126,7 @@ def login_user():
     user = User.query.filter_by(email=email).first()
 
     if user and verify_password(user.password, password):
+        session['user_id'] = user.id
         return redirect(url_for('homepage'))
 
     return "Invalid email or password"
