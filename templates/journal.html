@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Journal</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body{
+            background: linear-gradient(135deg, #EAF7F6, #D9EEF2);
+            min-height:100vh;
+            overflow:hidden;
+        }
+
+        /* HEADER */
+
+        .header{
+            height:90px;
+            background:white;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:0 40px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .page-title{
+            font-size:2rem;
+            color:#1F4E5F;
+            font-weight:bold;
+        }
+
+        .back-btn{
+            padding:14px 28px;
+            border:none;
+            border-radius:18px;
+            background:#5BA6A4;
+            color:white;
+            font-size:1rem;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .back-btn:hover{
+            background:#4A9492;
+        }
+
+        /* MAIN LAYOUT */
+
+        .main-container{
+            display:flex;
+            height:calc(100vh - 90px);
+            padding:25px;
+            gap:25px;
+        }
+
+        /* LEFT PANEL */
+
+        .journal-list-panel{
+            width:35%;
+            background:#F4FBFB;
+            border-radius:30px;
+            padding:25px;
+            overflow-y:auto;
+            border:2px solid #E3F1F1;
+        }
+
+        .section-title{
+            font-size:1.8rem;
+            color:#1F4E5F;
+            margin-bottom:20px;
+        }
+
+        .journal-card{
+            background:white;
+            border-radius:22px;
+            padding:22px;
+            margin-bottom:18px;
+            cursor:pointer;
+            transition:0.3s;
+            border:2px solid transparent;
+        }
+
+        .journal-card:hover{
+            border-color:#BFE3E2;
+            transform:translateY(-2px);
+        }
+
+        .journal-card h3{
+            color:#1F4E5F;
+            font-size:1.2rem;
+            margin-bottom:8px;
+        }
+
+        .journal-date{
+            color:#7A949A;
+            font-size:0.95rem;
+            margin-bottom:10px;
+        }
+
+        .journal-preview{
+            color:#5F7A82;
+            line-height:1.5;
+        }
+
+        /* RIGHT PANEL */
+
+        .editor-panel{
+            width:65%;
+            background:#F4FBFB;
+            border-radius:30px;
+            padding:35px;
+            display:flex;
+            flex-direction:column;
+            border:2px solid #E3F1F1;
+        }
+
+        .journal-title{
+            width:100%;
+            padding:20px;
+            border:none;
+            border-radius:20px;
+            background:white;
+            font-size:1.6rem;
+            color:#1F4E5F;
+            margin-bottom:20px;
+            outline:none;
+        }
+
+        .journal-title::placeholder{
+            color:#9DB2B7;
+        }
+
+        .journal-text{
+            flex:1;
+            resize:none;
+            border:none;
+            border-radius:25px;
+            background:white;
+            padding:30px;
+            font-size:1.1rem;
+            line-height:1.8;
+            outline:none;
+            color:#35545D;
+        }
+
+        .journal-text::placeholder{
+            color:#9DB2B7;
+        }
+
+        .button-row{
+            display:flex;
+            justify-content:flex-end;
+            margin-top:20px;
+        }
+
+        .save-btn{
+            padding:18px 40px;
+            border:none;
+            border-radius:20px;
+            background:#5BA6A4;
+            color:white;
+            font-size:1.1rem;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .save-btn:hover{
+            background:#4A9492;
+        }
+
+        /* SCROLLBAR */
+
+        ::-webkit-scrollbar{
+            width:10px;
+        }
+
+        ::-webkit-scrollbar-thumb{
+            background:#C9E5E4;
+            border-radius:10px;
+        }
+
+        /* MOBILE */
+
+        @media(max-width:900px){
+
+            .main-container{
+                flex-direction:column;
+                height:auto;
+            }
+
+            .journal-list-panel,
+            .editor-panel{
+                width:100%;
+            }
+
+            .journal-list-panel{
+                max-height:300px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+
+        <div class="page-title">
+            Journal
+        </div>
+
+        <a href="/homepage">
+            <button class="back-btn">
+                Back Home
+            </button>
+        </a>
+
+    </div>
+
+    <div class="main-container">
+
+        <!-- LEFT SIDE -->
+
+        <div class="journal-list-panel">
+
+            <h2 class="section-title">
+                Previous Journals
+            </h2>
+
+            <div class="journal-card">
+                <h3>Morning Walk</h3>
+                <div class="journal-date">
+                    26 May 2026
+                </div>
+                <div class="journal-preview">
+                    Today I went for a walk around the park and enjoyed the fresh air...
+                </div>
+            </div>
+
+            <div class="journal-card">
+                <h3>Family Visit</h3>
+                <div class="journal-date">
+                    24 May 2026
+                </div>
+                <div class="journal-preview">
+                    My daughter visited me today and we had tea together...
+                </div>
+            </div>
+
+            <div class="journal-card">
+                <h3>Garden Time</h3>
+                <div class="journal-date">
+                    22 May 2026
+                </div>
+                <div class="journal-preview">
+                    Spent some time watering flowers and relaxing outside...
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+
+        <div class="editor-panel">
+
+            <input
+                type="text"
+                class="journal-title"
+                placeholder="Journal Title..."
+            >
+
+            <textarea
+                class="journal-text"
+                placeholder="Write your thoughts, memories or reflections here..."
+            ></textarea>
+
+            <div class="button-row">
+
+                <button class="save-btn">
+                    Save Journal
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

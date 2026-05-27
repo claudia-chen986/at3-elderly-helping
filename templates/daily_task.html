@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tasks</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body{
+            background: linear-gradient(135deg, #EAF7F6, #D9EEF2);
+            min-height:100vh;
+            overflow:hidden;
+        }
+
+        /* HEADER */
+
+        .header{
+            height:90px;
+            background:white;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:0 40px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .page-title{
+            font-size:2rem;
+            color:#1F4E5F;
+            font-weight:bold;
+        }
+
+        .back-btn{
+            padding:14px 28px;
+            border:none;
+            border-radius:18px;
+            background:#5BA6A4;
+            color:white;
+            font-size:1rem;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .back-btn:hover{
+            background:#4A9492;
+        }
+
+        /* MAIN LAYOUT */
+
+        .main-container{
+            display:flex;
+            height:calc(100vh - 90px);
+            padding:25px;
+            gap:25px;
+        }
+
+        /* LEFT PANEL */
+
+        .task-panel{
+            width:33%;
+            background:#F4FBFB;
+            border-radius:30px;
+            padding:25px;
+            overflow-y:auto;
+            border:2px solid #E3F1F1;
+        }
+
+        .section-title{
+            font-size:1.8rem;
+            color:#1F4E5F;
+            margin-bottom:20px;
+        }
+
+        .task-card{
+            background:white;
+            border-radius:22px;
+            padding:22px;
+            margin-bottom:18px;
+            transition:0.3s;
+            border:2px solid transparent;
+            cursor:pointer;
+        }
+
+        .task-card:hover{
+            transform:translateY(-2px);
+            border-color:#BFE3E2;
+        }
+
+        .task-time{
+            color:#5BA6A4;
+            font-size:1rem;
+            font-weight:bold;
+            margin-bottom:8px;
+        }
+
+        .task-title{
+            color:#1F4E5F;
+            font-size:1.2rem;
+            margin-bottom:8px;
+            font-weight:bold;
+        }
+
+        .task-description{
+            color:#5F7A82;
+            line-height:1.5;
+        }
+
+        /* RIGHT PANEL */
+
+        .calendar-panel{
+            width:67%;
+            background:#F4FBFB;
+            border-radius:30px;
+            padding:35px;
+            border:2px solid #E3F1F1;
+        }
+
+        .calendar-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:35px;
+        }
+
+        .month-title{
+            font-size:2rem;
+            color:#1F4E5F;
+            font-weight:bold;
+        }
+
+        .calendar-grid{
+            display:grid;
+            grid-template-columns:repeat(7, 1fr);
+            gap:15px;
+        }
+
+        .day-name{
+            text-align:center;
+            font-weight:bold;
+            color:#5F7A82;
+            padding-bottom:15px;
+            font-size:1rem;
+        }
+
+        .calendar-day{
+            background:white;
+            border-radius:20px;
+            min-height:110px;
+            padding:15px;
+            transition:0.3s;
+            cursor:pointer;
+            position:relative;
+        }
+
+        .calendar-day:hover{
+            transform:translateY(-3px);
+            background:#EEF8F8;
+        }
+
+        .day-number{
+            color:#1F4E5F;
+            font-size:1.1rem;
+            font-weight:bold;
+        }
+
+        .event-dot{
+            width:10px;
+            height:10px;
+            background:#5BA6A4;
+            border-radius:50%;
+            position:absolute;
+            bottom:15px;
+            left:15px;
+        }
+
+        /* SCROLLBAR */
+
+        ::-webkit-scrollbar{
+            width:10px;
+        }
+
+        ::-webkit-scrollbar-thumb{
+            background:#C9E5E4;
+            border-radius:10px;
+        }
+
+        /* MOBILE */
+
+        @media(max-width:1000px){
+
+            .main-container{
+                flex-direction:column;
+                height:auto;
+            }
+
+            .task-panel,
+            .calendar-panel{
+                width:100%;
+            }
+
+            .task-panel{
+                max-height:350px;
+            }
+
+            .calendar-day{
+                min-height:90px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <div class="page-title">
+            Daily Tasks
+        </div>
+
+        <a href="/homepage">
+            <button class="back-btn">
+                Back Home
+            </button>
+        </a>
+
+    </div>
+
+    <!-- MAIN CONTENT -->
+
+    <div class="main-container">
+
+        <!-- LEFT SIDE -->
+
+        <div class="task-panel">
+
+            <h2 class="section-title">
+                Today's Tasks
+            </h2>
+
+            <div class="task-card">
+                <div class="task-time">
+                    9:00 AM
+                </div>
+
+                <div class="task-title">
+                    Take Medication
+                </div>
+
+                <div class="task-description">
+                    Blood pressure medication after breakfast.
+                </div>
+            </div>
+
+            <div class="task-card">
+                <div class="task-time">
+                    11:00 AM
+                </div>
+
+                <div class="task-title">
+                    Morning Walk
+                </div>
+
+                <div class="task-description">
+                    Short walk around the neighbourhood park.
+                </div>
+            </div>
+
+            <div class="task-card">
+                <div class="task-time">
+                    3:00 PM
+                </div>
+
+                <div class="task-title">
+                    Family Video Call
+                </div>
+
+                <div class="task-description">
+                    Video chat with daughter and grandchildren.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+
+        <div class="calendar-panel">
+
+            <div class="calendar-header">
+
+                <div class="month-title">
+                    May 2026
+                </div>
+
+            </div>
+
+            <div class="calendar-grid">
+
+                <div class="day-name">Sun</div>
+                <div class="day-name">Mon</div>
+                <div class="day-name">Tue</div>
+                <div class="day-name">Wed</div>
+                <div class="day-name">Thu</div>
+                <div class="day-name">Fri</div>
+                <div class="day-name">Sat</div>
+
+                <!-- Calendar Days -->
+
+                <div class="calendar-day"><div class="day-number">1</div></div>
+                <div class="calendar-day"><div class="day-number">2</div></div>
+
+                <div class="calendar-day">
+                    <div class="day-number">3</div>
+                    <div class="event-dot"></div>
+                </div>
+
+                <div class="calendar-day"><div class="day-number">4</div></div>
+
+                <div class="calendar-day">
+                    <div class="day-number">5</div>
+                    <div class="event-dot"></div>
+                </div>
+
+                <div class="calendar-day"><div class="day-number">6</div></div>
+                <div class="calendar-day"><div class="day-number">7</div></div>
+
+                <!-- continue if wanted -->
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

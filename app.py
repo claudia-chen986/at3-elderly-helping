@@ -63,14 +63,22 @@ def logout():
 
     return redirect(url_for('login'))
 
-@app.route('/daily_tasks')
-def daily_tasks():
-    return "Daily Tasks Page Coming Soon"
+@app.route('/daily_task')
+def daily_task():
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('daily_task.html')
 
 
 @app.route('/journal')
 def journal():
-    return "Journal Page Coming Soon"
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('journal.html')
 
 
 #sign up user route
