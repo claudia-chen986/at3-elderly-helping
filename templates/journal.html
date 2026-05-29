@@ -238,35 +238,21 @@
                 Previous Journals
             </h2>
 
-            <div class="journal-card">
-                <h3>Morning Walk</h3>
-                <div class="journal-date">
-                    26 May 2026
-                </div>
-                <div class="journal-preview">
-                    Today I went for a walk around the park and enjoyed the fresh air...
-                </div>
+            {% for entry in journal_entries %}
+                <div class="journal-card">
+                    <h3>
+                        {{ entry.title }}
+                    </h3>
+
+            <div class="journal-date">
+                {{ entry.time.strftime('%d %b %Y') }}
             </div>
 
-            <div class="journal-card">
-                <h3>Family Visit</h3>
-                <div class="journal-date">
-                    24 May 2026
+                    <div class="journal-preview">
+                        {{ entry.content[:100] }}...
+                    </div>
                 </div>
-                <div class="journal-preview">
-                    My daughter visited me today and we had tea together...
-                </div>
-            </div>
-
-            <div class="journal-card">
-                <h3>Garden Time</h3>
-                <div class="journal-date">
-                    22 May 2026
-                </div>
-                <div class="journal-preview">
-                    Spent some time watering flowers and relaxing outside...
-                </div>
-            </div>
+            {% endfor %}
 
         </div>
 
@@ -274,24 +260,35 @@
 
         <div class="editor-panel">
 
-            <input
-                type="text"
-                class="journal-title"
-                placeholder="Journal Title..."
-            >
+            <form action="/save_journal" method="POST"
+                style="display:flex;
+                    flex-direction:column;
+                    height:100%;">
 
-            <textarea
-                class="journal-text"
-                placeholder="Write your thoughts, memories or reflections here..."
-            ></textarea>
+                <input
+                    type="text"
+                    class="journal-title"
+                    placeholder="Journal Title..."
+                    name="title"
+                    required
+                >
 
-            <div class="button-row">
+                <textarea
+                    class="journal-text"
+                    placeholder="Write your thoughts, memories or reflections here..."
+                    name="content"
+                    required
+                ></textarea>
 
-                <button class="save-btn">
-                    Save Journal
-                </button>
+                <div class="button-row">
 
-            </div>
+                    <button class="save-btn" type="submit">
+                        Save Journal
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 

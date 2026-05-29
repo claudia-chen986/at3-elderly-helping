@@ -28,6 +28,13 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
 
+class JournalEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    time = db.Column(db.DateTime, default=db.func.current_timestamp())
+
 with app.app_context():
     db.create_all()
 
@@ -51,10 +58,32 @@ def homepage():
 
     user = User.query.get(session['user_id'])
 
+    journal_entries = JournalEntry.query.filter_by(user_id=user.id).order_by(JournalEntry.time.desc()).all()
+
     return render_template(
         'homepage.html',
-        user_name=user.name
+        user=user,
+        journal_entries=journal_entries
     )
+
+@app.route('/save_journal', methods=['POST'])
+def save_journal():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    title = request.form['title']
+    content = request.form['content']
+
+    entry = JournalEntry(
+        user_id=session['user_id'],
+        title=title,
+        content=content
+    )
+
+    db.session.add(entry)
+    db.session.commit()
+
+    return redirect(url_for('journal'))
 
 @app.route('/logout')
 def logout():
@@ -77,8 +106,14 @@ def journal():
 
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
+    journal_entries = JournalEntry.query.filter_by(user_id=session['user_id']).order_by(JournalEntry.time.desc()).all()
 
-    return render_template('journal.html')
+    return render_template(
+        'journal.html',
+        journal_entries=journal_entries
+    )
+
 
 
 #sign up user route
