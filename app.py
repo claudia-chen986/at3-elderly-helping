@@ -1,5 +1,6 @@
 from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
+from datetime import timedelta
 
 #authentication imports
 from authentication import (
@@ -9,12 +10,15 @@ from authentication import (
     verify_password
 )
 
+from journal_validation import validate_journal_entry
+
 app = Flask(
     __name__,
     template_folder='templates'
 )
 
-app.secret_key = 'my_secret_key'
+app.permanent_session_lifetime = timedelta(minutes=30)
+app.secret_key = 'Elderly_helping_app_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -73,6 +77,14 @@ def save_journal():
 
     title = request.form['title']
     content = request.form['content']
+
+    validation_error = validate_journal_entry(
+        title,
+        content
+    )
+
+    if validation_error:
+        return validation_error
 
     entry = JournalEntry(
         user_id=session['user_id'],
@@ -155,6 +167,8 @@ def signup_user():
     db.session.add(user)
     db.session.commit()
 
+    session.clear()
+    session.permanent = True
     session['user_id'] = user.id
 
     return redirect(url_for('homepage'))
@@ -169,6 +183,8 @@ def login_user():
     user = User.query.filter_by(email=email).first()
 
     if user and verify_password(user.password, password):
+        session.clear()
+        session.permanent = True
         session['user_id'] = user.id
         return redirect(url_for('homepage'))
 
