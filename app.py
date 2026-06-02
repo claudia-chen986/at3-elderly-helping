@@ -7,7 +7,8 @@ from authentication import (
     validate_email,
     validate_password,
     hash_password,
-    verify_password
+    verify_password,
+    generate_token
 )
 
 from journal_validation import validate_journal_entry
@@ -18,7 +19,11 @@ app = Flask(
 )
 
 app.permanent_session_lifetime = timedelta(minutes=30)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 app.secret_key = 'Elderly_helping_app_secret_key'
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -31,6 +36,7 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    session_token = db.Column(db.String(255), nullable=True)
 
 class JournalEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -54,13 +60,32 @@ def signup():
 def forgot_password():
     return render_template('forgot-password.html')
 
+def validate_session():
+
+    if (
+        'user_id' not in session or
+        'session_token' not in session
+    ):
+        return None
+
+    user = User.query.get(session['user_id'])
+
+    if not user:
+        return None
+
+    if user.session_token != session['session_token']:
+        session.clear()
+        return None
+
+    return user
+
 @app.route('/homepage')
 def homepage():
 
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+    user = validate_session()
 
-    user = User.query.get(session['user_id'])
+    if not user:
+        return redirect(url_for('login'))
 
     journal_entries = JournalEntry.query.filter_by(user_id=user.id).order_by(JournalEntry.time.desc()).all()
 
@@ -72,7 +97,9 @@ def homepage():
 
 @app.route('/save_journal', methods=['POST'])
 def save_journal():
-    if 'user_id' not in session:
+    user = validate_session()
+
+    if not user:
         return redirect(url_for('login'))
 
     title = request.form['title']
@@ -87,7 +114,7 @@ def save_journal():
         return validation_error
 
     entry = JournalEntry(
-        user_id=session['user_id'],
+        user_id=user.id,
         title=title,
         content=content
     )
@@ -100,6 +127,13 @@ def save_journal():
 @app.route('/logout')
 def logout():
 
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+
+        if user:
+            user.session_token = None
+            db.session.commit()
+
     session.clear()
 
     return redirect(url_for('login'))
@@ -107,7 +141,9 @@ def logout():
 @app.route('/daily_task')
 def daily_task():
 
-    if 'user_id' not in session:
+    user = validate_session()
+
+    if not user:
         return redirect(url_for('login'))
 
     return render_template('daily_task.html')
@@ -116,10 +152,12 @@ def daily_task():
 @app.route('/journal')
 def journal():
 
-    if 'user_id' not in session:
+    user = validate_session()
+
+    if not user:
         return redirect(url_for('login'))
-    
-    journal_entries = JournalEntry.query.filter_by(user_id=session['user_id']).order_by(JournalEntry.time.desc()).all()
+
+    journal_entries = JournalEntry.query.filter_by(user_id=user.id).order_by(JournalEntry.time.desc()).all()
 
     return render_template(
         'journal.html',
@@ -167,9 +205,16 @@ def signup_user():
     db.session.add(user)
     db.session.commit()
 
+    token = generate_token()
+
+    user.session_token = token
+    db.session.commit()
+
     session.clear()
     session.permanent = True
+
     session['user_id'] = user.id
+    session['session_token'] = token
 
     return redirect(url_for('homepage'))
     
@@ -183,13 +228,21 @@ def login_user():
     user = User.query.filter_by(email=email).first()
 
     if user and verify_password(user.password, password):
+        token = generate_token()
+
+        user.session_token = token
+        db.session.commit()
+
         session.clear()
         session.permanent = True
-        session['user_id'] = user.id
-        return redirect(url_for('homepage'))
 
+        session['user_id'] = user.id
+        session['session_token'] = token
+
+        return redirect(url_for('homepage'))
+    
     return "Invalid email or password"
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5173)

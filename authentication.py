@@ -1,3 +1,4 @@
+import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
 
@@ -34,3 +35,6 @@ def hash_password(password):
 
 def verify_password(hashed_password, password):
     return check_password_hash(hashed_password, password)
+
+def generate_token():
+    return secrets.token_hex(32)
