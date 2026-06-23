@@ -114,6 +114,76 @@
             line-height:1.5;
         }
 
+        /* TASK FORM */
+
+        .task-form{
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            margin-bottom:25px;
+        }
+
+        .task-input,
+        .task-date{
+            width:100%;
+            padding:15px;
+            border:2px solid #DCEBED;
+            border-radius:16px;
+            background:white;
+            font-size:1rem;
+            outline:none;
+            transition:0.3s;
+        }
+
+        .task-input:focus,
+        .task-date:focus{
+            border-color:#74C7C5;
+        }
+
+        .add-task-btn{
+            padding:15px;
+            border:none;
+            border-radius:16px;
+            background:#5BA6A4;
+            color:white;
+            font-size:1rem;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .add-task-btn:hover{
+            background:#4A9492;
+        }
+
+        .task-date-text{
+            color:#5BA6A4;
+            font-weight:bold;
+            margin-bottom:10px;
+        }
+
+        .completed-btn{
+            margin-top:12px;
+            padding:10px 18px;
+            border:none;
+            border-radius:12px;
+            background:#5BA6A4;
+            color:white;
+            cursor:pointer;
+            font-weight:bold;
+            transition:0.3s;
+        }
+
+        .completed-btn:hover{
+            background:#4A9492;
+        }
+
+        .completed-label{
+            margin-top:12px;
+            color:#2F8F83;
+            font-weight:bold;
+        }
+
         /* RIGHT PANEL */
 
         .calendar-panel{
@@ -248,48 +318,69 @@
             <h2 class="section-title">
                 Today's Tasks
             </h2>
+            
+            <form action="/add_task" method="POST" class="task-form">
 
+                <input
+                    type="text"
+                    name="task_name"
+                    class="task-input"
+                    placeholder="Task Name"
+                    required
+                >
+
+                <input
+                    type="date"
+                    name="task_date"
+                    class="task-date"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="add-task-btn">
+
+                    Add Task
+
+                </button>
+
+            </form>
+            
+            {% for task in tasks %}
             <div class="task-card">
-                <div class="task-time">
-                    9:00 AM
+
+                <div class="task-date-text">
+                    {{ task.task_date.strftime('%d %b %Y') }}
                 </div>
 
                 <div class="task-title">
-                    Take Medication
+                    {{ task.task_name }}
                 </div>
 
-                <div class="task-description">
-                    Blood pressure medication after breakfast.
-                </div>
+                {% if task.completed %}
+
+                    <div class="completed-label">
+                        ✓ Completed
+                    </div>
+
+                {% else %}
+
+                    <form action="/complete_task/{{ task.id }}" method="POST">
+
+                        <button
+                            type="submit"
+                            class="completed-btn">
+
+                            Mark Complete
+
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
             </div>
-
-            <div class="task-card">
-                <div class="task-time">
-                    11:00 AM
-                </div>
-
-                <div class="task-title">
-                    Morning Walk
-                </div>
-
-                <div class="task-description">
-                    Short walk around the neighbourhood park.
-                </div>
-            </div>
-
-            <div class="task-card">
-                <div class="task-time">
-                    3:00 PM
-                </div>
-
-                <div class="task-title">
-                    Family Video Call
-                </div>
-
-                <div class="task-description">
-                    Video chat with daughter and grandchildren.
-                </div>
-            </div>
+        {% endfor %}
 
         </div>
 

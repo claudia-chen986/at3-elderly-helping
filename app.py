@@ -1,6 +1,6 @@
 from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 #authentication imports
 from authentication import (
@@ -44,6 +44,13 @@ class JournalEntry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     time = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+class DailyTask(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    task_name = db.Column(db.String(255), nullable=False)
+    task_date =  db.Column(db.Date,nullable=False)
+    completed = db.Column(db.Boolean, default=False)
 
 with app.app_context():
     db.create_all()
@@ -145,9 +152,10 @@ def daily_task():
 
     if not user:
         return redirect(url_for('login'))
+    
+    tasks = DailyTask.query.filter_by(user_id=user.id).order_by(DailyTask.task_date).all()
 
-    return render_template('daily_task.html')
-
+    return render_template('daily_task.html', tasks=tasks)
 
 @app.route('/journal')
 def journal():
@@ -164,7 +172,48 @@ def journal():
         journal_entries=journal_entries
     )
 
+@app.route('/add_task', methods=['POST'])
+def add_task():
 
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    task_name = request.form['task_name']
+    task_date = datetime.strptime(request.form['task_date'],'%Y-%m-%d').date()
+
+    if not task_name.strip():
+        return "Task name cannot be empty."
+
+    task = DailyTask(
+        user_id=user.id,
+        task_name=task_name,
+        task_date=task_date
+    )
+
+    db.session.add(task)
+    db.session.commit()
+
+    return redirect(url_for('daily_task'))
+
+@app.route('/complete_task/<int:task_id>', methods=['POST'])
+def complete_task(task_id):
+    
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    task = DailyTask.query.get(task_id)
+
+    if not task or task.user_id != user.id:
+        return "Task not found."
+
+    task.completed = True
+    db.session.commit()
+
+    return redirect(url_for('daily_task'))
 
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
