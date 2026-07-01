@@ -156,21 +156,45 @@ def daily_task():
     
     month = request.args.get('month', datetime.now().month, type=int)
     year = request.args.get('year', datetime.now().year, type=int)
+    day = request.args.get('day', datetime.now().day, type=int)
 
     calendar_days = calendar.monthcalendar(year, month)
 
-    tasks = DailyTask.query.filter_by(user_id=user.id).all()
+    tasks_query = DailyTask.query.filter_by(user_id=user.id)
+
+    if day:
+        tasks_query = tasks_query.filter(
+            db.extract('day', DailyTask.task_date) == day,
+            db.extract('month', DailyTask.task_date) == month,
+            db.extract('year', DailyTask.task_date) == year
+        )
+
+    tasks = tasks_query.order_by(
+        DailyTask.task_date
+    ).all()
+
+    month_tasks = DailyTask.query.filter_by(user_id=user.id).filter(
+    db.extract('month', DailyTask.task_date) == month,
+    db.extract('year', DailyTask.task_date) == year
+    ).all()
 
     task_days = [
-        task.task_date.day 
-        for task in tasks
-        if task.task_date.month == month 
-        and task.task_date.year == year
+    task.task_date.day
+    for task in month_tasks
     ]
 
     month_name = calendar.month_name[month]
 
-    return render_template('daily_task.html', tasks=tasks, calendar_days=calendar_days, month=month, year=year, task_days=task_days, month_name=month_name)
+    return render_template(
+        'daily_task.html',
+        tasks=tasks,
+        calendar_days=calendar_days,
+        task_days=task_days,
+        month=month,
+        year=year,
+        month_name=month_name,
+        selected_day=day
+    )
  
 @app.route('/journal')
 def journal():

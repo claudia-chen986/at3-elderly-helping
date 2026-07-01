@@ -263,6 +263,16 @@
             background:#EEF8F8;
         }
 
+        .calendar-link{
+            text-decoration:none;
+            color:inherit;
+        }
+
+        .selected-day{
+            border:3px solid #5BA6A4;
+            background:#EAF7F6;
+        }
+
         .day-number{
             color:#1F4E5F;
             font-size:1.1rem;
@@ -460,14 +470,18 @@
                         {% if day == 0 %}
                             <div class="calendar-day"></div>
                         {% else %}
-                            <div class="calendar-day">
-                                <div class="day-number">
-                                    {{ day }}
-                                </div>
-                                {% if day in task_days %}
-                                    <div class="event-dot"></div>
-                                {% endif %}
-                            </div>
+                            <a href="/daily_task?year={{ year }}&month={{ month }}&day={{ day }}"
+                                class="calendar-link">
+                                    <div class="calendar-day {% if day == selected_day %}selected-day{% endif %}">
+                                        <div class="day-number">
+                                            {{ day }}
+                                        </div>
+
+                                        {% if day in task_days %}
+                                            <div class="event-dot"></div>
+                                        {% endif %}
+                                    </div>
+                                </a>
                         {% endif %}
                     {% endfor %}
                 {% endfor %}
