@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import timedelta, datetime
+import calendar
 
 #authentication imports
 from authentication import (
@@ -153,10 +154,24 @@ def daily_task():
     if not user:
         return redirect(url_for('login'))
     
-    tasks = DailyTask.query.filter_by(user_id=user.id).order_by(DailyTask.task_date).all()
+    month = request.args.get('month', datetime.now().month, type=int)
+    year = request.args.get('year', datetime.now().year, type=int)
 
-    return render_template('daily_task.html', tasks=tasks)
+    calendar_days = calendar.monthcalendar(year, month)
 
+    tasks = DailyTask.query.filter_by(user_id=user.id).all()
+
+    task_days = [
+        task.task_date.day 
+        for task in tasks
+        if task.task_date.month == month 
+        and task.task_date.year == year
+    ]
+
+    month_name = calendar.month_name[month]
+
+    return render_template('daily_task.html', tasks=tasks, calendar_days=calendar_days, month=month, year=year, task_days=task_days, month_name=month_name)
+ 
 @app.route('/journal')
 def journal():
 

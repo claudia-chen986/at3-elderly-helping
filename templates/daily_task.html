@@ -17,7 +17,6 @@
         body{
             background: linear-gradient(135deg, #EAF7F6, #D9EEF2);
             min-height:100vh;
-            overflow:hidden;
         }
 
         /* HEADER */
@@ -30,6 +29,9 @@
             align-items:center;
             padding:0 40px;
             box-shadow:0 4px 12px rgba(0,0,0,0.08);
+            position:sticky;
+            top:0;
+            z-index:1000;
         }
 
         .page-title{
@@ -58,9 +60,9 @@
 
         .main-container{
             display:flex;
-            height:calc(100vh - 90px);
-            padding:25px;
             gap:25px;
+            padding:25px;
+            align-items:stretch;
         }
 
         /* LEFT PANEL */
@@ -70,8 +72,9 @@
             background:#F4FBFB;
             border-radius:30px;
             padding:25px;
-            overflow-y:auto;
             border:2px solid #E3F1F1;
+            max-height:800px;
+            overflow-y:auto;
         }
 
         .section-title{
@@ -140,6 +143,10 @@
             border-color:#74C7C5;
         }
 
+        .task-list{
+            margin-top:20px;
+        }
+
         .add-task-btn{
             padding:15px;
             border:none;
@@ -187,11 +194,17 @@
         /* RIGHT PANEL */
 
         .calendar-panel{
-            width:67%;
+            flex:1;
             background:#F4FBFB;
             border-radius:30px;
             padding:35px;
             border:2px solid #E3F1F1;
+            min-height:800px;
+        }
+
+        .task-panel,
+        .calendar-panel{
+            min-height:800px;
         }
 
         .calendar-header{
@@ -210,7 +223,7 @@
         .calendar-grid{
             display:grid;
             grid-template-columns:repeat(7, 1fr);
-            gap:15px;
+            gap:10px;
         }
 
         .day-name{
@@ -224,10 +237,8 @@
         .calendar-day{
             background:white;
             border-radius:20px;
-            min-height:110px;
-            padding:15px;
-            transition:0.3s;
-            cursor:pointer;
+            height:70px;
+            padding:12px;
             position:relative;
         }
 
@@ -243,13 +254,13 @@
         }
 
         .event-dot{
-            width:10px;
-            height:10px;
+            width:15px;
+            height:15px;
             background:#5BA6A4;
             border-radius:50%;
             position:absolute;
-            bottom:15px;
-            left:15px;
+            bottom:12px;
+            left:12px;
         }
 
         /* SCROLLBAR */
@@ -282,7 +293,7 @@
             }
 
             .calendar-day{
-                min-height:90px;
+                min-height:70px;
             }
         }
 
@@ -346,6 +357,7 @@
 
             </form>
             
+        <div class="task-list">
             {% for task in tasks %}
             <div class="task-card">
 
@@ -380,7 +392,8 @@
                 {% endif %}
 
             </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
 
         </div>
 
@@ -389,11 +402,19 @@
         <div class="calendar-panel">
 
             <div class="calendar-header">
-
+                <a href="/daily_task?month={{ month-1 if month > 1 else 12 }}&year={{ year if month > 1 else year-1 }}">
+                    <button class="back-btn">
+                        ◀
+                    </button>
+                </a>
                 <div class="month-title">
-                    May 2026
+                    {{ month_name }} {{ year }}
                 </div>
-
+                <a href="/daily_task?month={{ month+1 if month < 12 else 1 }}&year={{ year if month < 12 else year+1 }}">
+                    <button class="back-btn">
+                        ▶
+                    </button>
+                </a>
             </div>
 
             <div class="calendar-grid">
@@ -406,33 +427,24 @@
                 <div class="day-name">Fri</div>
                 <div class="day-name">Sat</div>
 
-                <!-- Calendar Days -->
-
-                <div class="calendar-day"><div class="day-number">1</div></div>
-                <div class="calendar-day"><div class="day-number">2</div></div>
-
-                <div class="calendar-day">
-                    <div class="day-number">3</div>
-                    <div class="event-dot"></div>
-                </div>
-
-                <div class="calendar-day"><div class="day-number">4</div></div>
-
-                <div class="calendar-day">
-                    <div class="day-number">5</div>
-                    <div class="event-dot"></div>
-                </div>
-
-                <div class="calendar-day"><div class="day-number">6</div></div>
-                <div class="calendar-day"><div class="day-number">7</div></div>
-
-                <!-- continue if wanted -->
-
+                {% for week in calendar_days %}
+                    {% for day in week %}
+                        {% if day == 0 %}
+                            <div class="calendar-day"></div>
+                        {% else %}
+                            <div class="calendar-day">
+                                <div class="day-number">
+                                    {{ day }}
+                                </div>
+                                {% if day in task_days %}
+                                    <div class="event-dot"></div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
             </div>
-
         </div>
-
     </div>
-
 </body>
 </html>
