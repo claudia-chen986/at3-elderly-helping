@@ -179,6 +179,22 @@
             background:#4A9492;
         }
 
+        .delete-btn{
+            margin-top:15px;
+            padding:10px 18px;
+            background:#E37A7A;
+            color:white;
+            border:none;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:bold;
+            transition:0.3s;
+        }
+
+        .delete-btn:hover{
+            background:#D45E5E;
+        }
+
         /* SCROLLBAR */
 
         ::-webkit-scrollbar{
@@ -243,6 +259,16 @@
                     <h3>
                         {{ entry.title }}
                     </h3>
+                    
+                    <form action="/delete_journal/{{ entry.id }}" method="POST">
+                        <button
+                            type="submit"
+                            class="delete-btn">
+
+                            Delete
+
+                        </button>
+                    </form>
 
             <div class="journal-date">
                 {{ entry.time.strftime('%d %b %Y') }}

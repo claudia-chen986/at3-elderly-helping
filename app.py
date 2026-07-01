@@ -164,7 +164,23 @@ def journal():
         journal_entries=journal_entries
     )
 
+@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
+def delete_journal(entry_id):
 
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    entry = JournalEntry.query.get(entry_id)
+
+    if not entry or entry.user_id != user.id:
+        return "Journal entry not found."
+
+    db.session.delete(entry)
+    db.session.commit()
+
+    return redirect(url_for('journal'))
 
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
