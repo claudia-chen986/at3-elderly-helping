@@ -230,6 +230,24 @@ def complete_task(task_id):
 
     return redirect(url_for('daily_task'))
 
+@app.route('/delete_task/<int:task_id>', methods=['POST'])
+def delete_task(task_id):
+
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    task = DailyTask.query.get(task_id)
+
+    if not task or task.user_id != user.id:
+        return "Task not found."
+
+    db.session.delete(task)
+    db.session.commit()
+
+    return redirect(url_for('daily_task'))
+
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
 def signup_user():
