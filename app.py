@@ -132,6 +132,24 @@ def save_journal():
 
     return redirect(url_for('journal'))
 
+@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
+def delete_journal(entry_id):
+
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    entry = JournalEntry.query.get(entry_id)
+
+    if not entry or entry.user_id != user.id:
+        return "Journal entry not found."
+
+    db.session.delete(entry)
+    db.session.commit()
+
+    return redirect(url_for('journal'))
+
 @app.route('/logout')
 def logout():
 
