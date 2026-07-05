@@ -295,16 +295,14 @@
                     flex-direction:column;
                     height:100%;">
 
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
                 <input
                     type="text"
                     class="journal-title"
                     placeholder="Journal Title..."
                     name="title"
                     required
-
-                    type="hidden"
-                    name="csrf_token"
-                    value="{{ csrf_token }}"
                 >
 
                 <textarea

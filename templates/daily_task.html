@@ -358,16 +358,14 @@
             
             <form action="/add_task" method="POST" class="task-form">
 
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
                 <input
                     type="text"
                     name="task_name"
                     class="task-input"
                     placeholder="Task Name"
                     required
-
-                    type="hidden"
-                    name="csrf_token"
-                    value="{{ csrf_token }}"
                 >
 
                 <input
@@ -375,10 +373,6 @@
                     name="task_date"
                     class="task-date"
                     required
-
-                    type="hidden"
-                    name="csrf_token"
-                    value="{{ csrf_token }}"
                 >
 
                 <button
