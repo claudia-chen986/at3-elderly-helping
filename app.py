@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import timedelta
+from datetime import timedelta, datetime
+import calendar
 
 #authentication imports
 from authentication import (
@@ -44,6 +45,13 @@ class JournalEntry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     time = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+class DailyTask(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    task_name = db.Column(db.String(255), nullable=False)
+    task_date =  db.Column(db.Date,nullable=False)
+    completed = db.Column(db.Boolean, default=False)
 
 with app.app_context():
     db.create_all()
@@ -124,6 +132,24 @@ def save_journal():
 
     return redirect(url_for('journal'))
 
+@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
+def delete_journal(entry_id):
+
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    entry = JournalEntry.query.get(entry_id)
+
+    if not entry or entry.user_id != user.id:
+        return "Journal entry not found."
+
+    db.session.delete(entry)
+    db.session.commit()
+
+    return redirect(url_for('journal'))
+
 @app.route('/logout')
 def logout():
 
@@ -145,10 +171,49 @@ def daily_task():
 
     if not user:
         return redirect(url_for('login'))
+    
+    month = request.args.get('month', datetime.now().month, type=int)
+    year = request.args.get('year', datetime.now().year, type=int)
+    day = request.args.get('day', datetime.now().day, type=int)
 
-    return render_template('daily_task.html')
+    calendar_days = calendar.monthcalendar(year, month)
 
+    tasks_query = DailyTask.query.filter_by(user_id=user.id)
 
+    if day:
+        tasks_query = tasks_query.filter(
+            db.extract('day', DailyTask.task_date) == day,
+            db.extract('month', DailyTask.task_date) == month,
+            db.extract('year', DailyTask.task_date) == year
+        )
+
+    tasks = tasks_query.order_by(
+        DailyTask.task_date
+    ).all()
+
+    month_tasks = DailyTask.query.filter_by(user_id=user.id).filter(
+    db.extract('month', DailyTask.task_date) == month,
+    db.extract('year', DailyTask.task_date) == year
+    ).all()
+
+    task_days = [
+    task.task_date.day
+    for task in month_tasks
+    ]
+
+    month_name = calendar.month_name[month]
+
+    return render_template(
+        'daily_task.html',
+        tasks=tasks,
+        calendar_days=calendar_days,
+        task_days=task_days,
+        month=month,
+        year=year,
+        month_name=month_name,
+        selected_day=day
+    )
+ 
 @app.route('/journal')
 def journal():
 
@@ -164,23 +229,7 @@ def journal():
         journal_entries=journal_entries
     )
 
-@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
-def delete_journal(entry_id):
 
-    user = validate_session()
-
-    if not user:
-        return redirect(url_for('login'))
-
-    entry = JournalEntry.query.get(entry_id)
-
-    if not entry or entry.user_id != user.id:
-        return "Journal entry not found."
-
-    db.session.delete(entry)
-    db.session.commit()
-
-    return redirect(url_for('journal'))
 
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
