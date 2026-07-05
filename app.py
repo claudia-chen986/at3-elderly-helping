@@ -112,59 +112,6 @@ def homepage():
         csrf_token=session.get('csrf_token')
     )
 
-@app.route('/save_journal', methods=['POST'])
-def save_journal():
-    user = validate_session()
-
-    if not user:
-        return redirect(url_for('login'))
-    
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-
-    title = request.form['title']
-    content = request.form['content']
-
-    validation_error = validate_journal_entry(
-        title,
-        content
-    )
-
-    if validation_error:
-        return validation_error
-
-    entry = JournalEntry(
-        user_id=user.id,
-        title=title,
-        content=content
-    )
-
-    db.session.add(entry)
-    db.session.commit()
-
-    return redirect(url_for('journal'))
-
-@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
-def delete_journal(entry_id):
-
-    user = validate_session()
-
-    if not user:
-        return redirect(url_for('login'))
-    
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-
-    entry = JournalEntry.query.get(entry_id)
-
-    if not entry or entry.user_id != user.id:
-        return "Journal entry not found."
-
-    db.session.delete(entry)
-    db.session.commit()
-
-    return redirect(url_for('journal'))
-
 @app.route('/logout')
 def logout():
 
@@ -229,6 +176,76 @@ def daily_task():
         selected_day=day,
         csrf_token=session.get('csrf_token')
     )
+
+@app.route('/add_task', methods=['POST'])
+def add_task():
+
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+    
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
+
+    task_name = request.form['task_name']
+    task_date = datetime.strptime(request.form['task_date'],'%Y-%m-%d').date()
+
+    if not task_name.strip():
+        return "Task name cannot be empty."
+
+    task = DailyTask(
+        user_id=user.id,
+        task_name=task_name,
+        task_date=task_date
+    )
+
+    db.session.add(task)
+    db.session.commit()
+
+    return redirect(url_for('daily_task'))
+
+@app.route('/complete_task/<int:task_id>', methods=['POST'])
+def complete_task(task_id):
+    
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+    
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
+
+    task = DailyTask.query.get(task_id)
+
+    if not task or task.user_id != user.id:
+        return "Task not found."
+
+    task.completed = True
+    db.session.commit()
+
+    return redirect(url_for('daily_task'))
+
+@app.route('/delete_task/<int:task_id>', methods=['POST'])
+def delete_task(task_id):
+
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+    
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
+
+    task = DailyTask.query.get(task_id)
+
+    if not task or task.user_id != user.id:
+        return "Task not found."
+
+    db.session.delete(task)
+    db.session.commit()
+
+    return redirect(url_for('daily_task'))
  
 @app.route('/journal')
 def journal():
@@ -245,6 +262,59 @@ def journal():
         journal_entries=journal_entries,
         csrf_token=session.get('csrf_token')
     )
+
+@app.route('/save_journal', methods=['POST'])
+def save_journal():
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+    
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
+
+    title = request.form['title']
+    content = request.form['content']
+
+    validation_error = validate_journal_entry(
+        title,
+        content
+    )
+
+    if validation_error:
+        return validation_error
+
+    entry = JournalEntry(
+        user_id=user.id,
+        title=title,
+        content=content
+    )
+
+    db.session.add(entry)
+    db.session.commit()
+
+    return redirect(url_for('journal'))
+
+@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
+def delete_journal(entry_id):
+
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+    
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
+
+    entry = JournalEntry.query.get(entry_id)
+
+    if not entry or entry.user_id != user.id:
+        return "Journal entry not found."
+
+    db.session.delete(entry)
+    db.session.commit()
+
+    return redirect(url_for('journal'))
 
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
