@@ -320,6 +320,9 @@ def delete_journal(entry_id):
 @app.route('/signup_user', methods=['POST'])
 def signup_user():
 
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
+    
     name = request.form['fullname']
     email = request.form['email']
     password = request.form['password']
