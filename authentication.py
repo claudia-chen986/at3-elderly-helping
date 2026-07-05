@@ -1,4 +1,5 @@
 import secrets
+from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
 
@@ -38,3 +39,12 @@ def verify_password(hashed_password, password):
 
 def generate_token():
     return secrets.token_hex(32)
+
+def generate_csrf_token():
+    return secrets.token_hex(32)
+
+def validate_csrf_token(form_token):
+    if 'csrf_token' not in session:
+        return False
+    
+    return session['csrf_token'] == form_token

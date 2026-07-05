@@ -9,7 +9,9 @@ from authentication import (
     validate_password,
     hash_password,
     verify_password,
-    generate_token
+    generate_token,
+    generate_csrf_token,
+    validate_csrf_token
 )
 
 from journal_validation import validate_journal_entry
@@ -58,15 +60,18 @@ with app.app_context():
 
 @app.route('/')
 def login():
-    return render_template('login.html')
+    session['csrf_token'] = generate_csrf_token()
+    return render_template('login.html',csrf_token=session.get('csrf_token'))
 
 @app.route('/signup')
 def signup():
-    return render_template('signup.html')
+    session['csrf_token'] = generate_csrf_token()
+    return render_template('signup.html', csrf_token=session.get('csrf_token'))
 
 @app.route('/forgot_password')
 def forgot_password():
-    return render_template('forgot-password.html')
+    session['csrf_token'] = generate_csrf_token()
+    return render_template('forgot-password.html', csrf_token=session.get('csrf_token'))
 
 def validate_session():
 
@@ -100,7 +105,8 @@ def homepage():
     return render_template(
         'homepage.html',
         user=user,
-        journal_entries=journal_entries
+        journal_entries=journal_entries,
+        csrf_token=session.get('csrf_token')
     )
 
 @app.route('/save_journal', methods=['POST'])
@@ -211,7 +217,8 @@ def daily_task():
         month=month,
         year=year,
         month_name=month_name,
-        selected_day=day
+        selected_day=day,
+        csrf_token=session.get('csrf_token')
     )
  
 @app.route('/journal')
@@ -226,10 +233,9 @@ def journal():
 
     return render_template(
         'journal.html',
-        journal_entries=journal_entries
+        journal_entries=journal_entries,
+        csrf_token=session.get('csrf_token')
     )
-
-
 
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
@@ -280,6 +286,7 @@ def signup_user():
 
     session['user_id'] = user.id
     session['session_token'] = token
+    session['csrf_token'] = generate_csrf_token()
 
     return redirect(url_for('homepage'))
     
@@ -303,6 +310,7 @@ def login_user():
 
         session['user_id'] = user.id
         session['session_token'] = token
+        session['csrf_token'] = generate_csrf_token()
 
         return redirect(url_for('homepage'))
     
