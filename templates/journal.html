@@ -263,6 +263,8 @@
                     <form action="/delete_journal/{{ entry.id }}" \
                         method="POST"
                         onsubmit="return confirm('Are you sure you want to delete this journal entry?');">
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         
                         <button
                             type="submit"
@@ -299,6 +301,10 @@
                     placeholder="Journal Title..."
                     name="title"
                     required
+
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
                 >
 
                 <textarea

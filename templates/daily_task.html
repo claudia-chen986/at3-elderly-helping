@@ -364,6 +364,10 @@
                     class="task-input"
                     placeholder="Task Name"
                     required
+
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
                 >
 
                 <input
@@ -371,6 +375,10 @@
                     name="task_date"
                     class="task-date"
                     required
+
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token }}"
                 >
 
                 <button
@@ -405,6 +413,8 @@
 
                     <form action="/complete_task/{{ task.id }}" method="POST">
 
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
                         <button
                             type="submit"
                             class="completed-btn">
@@ -416,6 +426,8 @@
                     </form>
 
                     <form action="/delete_task/{{ task.id }}" method="POST">
+
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
                         <button
                             type="submit"

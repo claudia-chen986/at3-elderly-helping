@@ -60,17 +60,20 @@ with app.app_context():
 
 @app.route('/')
 def login():
-    session['csrf_token'] = generate_csrf_token()
+    if 'csrf_token' not in session:
+        session['csrf_token'] = generate_csrf_token()
     return render_template('login.html',csrf_token=session.get('csrf_token'))
 
 @app.route('/signup')
 def signup():
-    session['csrf_token'] = generate_csrf_token()
+    if 'csrf_token' not in session:
+        session['csrf_token'] = generate_csrf_token()
     return render_template('signup.html', csrf_token=session.get('csrf_token'))
 
 @app.route('/forgot_password')
 def forgot_password():
-    session['csrf_token'] = generate_csrf_token()
+    if 'csrf_token' not in session:
+        session['csrf_token'] = generate_csrf_token()
     return render_template('forgot-password.html', csrf_token=session.get('csrf_token'))
 
 def validate_session():
@@ -115,6 +118,9 @@ def save_journal():
 
     if not user:
         return redirect(url_for('login'))
+    
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
 
     title = request.form['title']
     content = request.form['content']
@@ -145,6 +151,9 @@ def delete_journal(entry_id):
 
     if not user:
         return redirect(url_for('login'))
+    
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
 
     entry = JournalEntry.query.get(entry_id)
 
@@ -294,6 +303,9 @@ def signup_user():
 @app.route('/login_user', methods=['POST'])
 def login_user():
 
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        return "Invalid CSRF token.", 403
+    
     email = request.form['email']
     password = request.form['password']
 
