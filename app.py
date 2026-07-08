@@ -2,6 +2,8 @@ from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import timedelta, datetime
 import calendar
+import os
+from flask import send_from_directory
 
 #authentication imports
 from authentication import (
@@ -28,6 +30,10 @@ app.secret_key = 'Elderly_helping_app_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+UPLOAD_FOLDER = "static/uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 db = SQLAlchemy(app)
 
 
@@ -45,6 +51,17 @@ class JournalEntry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     time = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    images = db.relationship(
+        'JournalImage',
+        backref='journal',
+        cascade="all, delete"
+    )
+
+class JournalImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    journal_id = db.Column(db.Integer, db.ForeignKey('journal_entry.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
 
 class DailyTask(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -129,7 +146,25 @@ def save_journal():
 
     db.session.add(entry)
     db.session.commit()
+    
+    images = request.files.getlist("journal_image")
 
+    for image in images:
+        if image.filename:
+            filename = image.filename
+            filepath = os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                filename
+            )
+            image.save(filepath)
+            journal_image = JournalImage(
+                journal_id=entry.id,
+                filename=filename
+            )
+
+            db.session.add(journal_image)
+
+    db.session.commit()
     return redirect(url_for('journal'))
 
 @app.route('/delete_journal/<int:entry_id>', methods=['POST'])

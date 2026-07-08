@@ -288,14 +288,24 @@
                         </button>
                     </form>
 
-            <div class="journal-date">
-                {{ entry.time.strftime('%d %b %Y') }}
-            </div>
-
-                    <div class="journal-preview">
-                        {{ entry.content[:100] }}...
-                    </div>
+                <div class="journal-date">
+                    {{ entry.time.strftime('%d %b %Y') }}
                 </div>
+                <div class="journal-preview">
+                    {{ entry.content[:100] }}...
+                </div>
+                <div class="saved-images">
+                    {% for image in entry.images %}
+                        <img 
+                            src="{{ url_for('static', filename='uploads/' + image.filename) }}"
+                            style="
+                                width:100%;
+                                margin-top:10px;
+                                border-radius:15px;
+                            ">
+                    {% endfor %}
+                </div>
+            </div>
             {% endfor %}
 
         </div>
@@ -329,6 +339,7 @@
                     id="journal_image"
                     name="journal_image"
                     accept="image/*"
+                    multiple
                     hidden
                 >
 
@@ -339,15 +350,18 @@
                     Choose Image
                 </label>
 
-                <img
-                    id="imagePreview"
+                <div id="previewContainer"
                     style="
-                        display:none;
-                        max-width:100%;
+                        display:flex;
+                        flex-direction:row;
+                        flex-wrap:wrap;
+                        gap:15px;
                         margin-top:15px;
-                        border-radius:15px;
-                    "
-                >
+                        max-height:250px;
+                        overflow:auto;
+                        padding:5px;
+                    ">
+                </div>
 
                 <div class="button-row">
 
@@ -364,24 +378,50 @@
     </div>
 
 <script>
+const input = document.getElementById("journal_image");
+const previewContainer = document.getElementById("previewContainer");
 
-const imageInput = document.getElementById("journal_image");
-const preview = document.getElementById("imagePreview");
+input.addEventListener("change", function () {
 
-imageInput.addEventListener("change", function () {
+    // Make the preview container scrollable (both directions)
+    previewContainer.style.display = "flex";
+    previewContainer.style.flexWrap = "wrap";
+    previewContainer.style.gap = "15px";
+    previewContainer.style.width = "100%";
+    previewContainer.style.maxHeight = "250px";
+    previewContainer.style.overflow = "auto";
+    previewContainer.style.padding = "10px";
+    previewContainer.style.background = "white";
+    previewContainer.style.borderRadius = "20px";
 
-    const file = this.files[0];
+    // Clear old previews
+    previewContainer.innerHTML = "";
 
-    if (!file){
-        preview.style.display = "none";
-        return;
-    }
+    [...this.files].forEach(file => {
 
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
+        if (!file.type.startsWith("image/")) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+
+            const img = document.createElement("img");
+
+            img.src = e.target.result;
+
+            img.style.width = "140px";
+            img.style.height = "140px";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "15px";
+            img.style.flexShrink = "0";
+
+            previewContainer.appendChild(img);
+        };
+
+        reader.readAsDataURL(file);
+    });
 
 });
-
 </script>
 </body>
 </html>
