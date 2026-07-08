@@ -195,6 +195,22 @@
             background:#D45E5E;
         }
 
+        .upload-btn{
+            display:inline-block;
+            padding:12px 24px;
+            background:#8cc1bf;
+            color:white;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:bold;
+            margin-top:10px;
+            transition:0.3s;
+        }
+
+        .upload-btn:hover{
+            background:#4A9492;
+        }
+
         /* SCROLLBAR */
 
         ::-webkit-scrollbar{
@@ -288,7 +304,7 @@
 
         <div class="editor-panel">
 
-            <form action="/save_journal" method="POST"
+            <form action="/save_journal" method="POST" enctype="multipart/form-data"
                 style="display:flex;
                     flex-direction:column;
                     height:100%;">
@@ -308,6 +324,31 @@
                     required
                 ></textarea>
 
+                <input
+                    type="file"
+                    id="journal_image"
+                    name="journal_image"
+                    accept="image/*"
+                    hidden
+                >
+
+                <label
+                    for= "journal_image"
+                    class= "upload-btn"
+                >
+                    Choose Image
+                </label>
+
+                <img
+                    id="imagePreview"
+                    style="
+                        display:none;
+                        max-width:100%;
+                        margin-top:15px;
+                        border-radius:15px;
+                    "
+                >
+
                 <div class="button-row">
 
                     <button class="save-btn" type="submit">
@@ -322,5 +363,25 @@
 
     </div>
 
+<script>
+
+const imageInput = document.getElementById("journal_image");
+const preview = document.getElementById("imagePreview");
+
+imageInput.addEventListener("change", function () {
+
+    const file = this.files[0];
+
+    if (!file){
+        preview.style.display = "none";
+        return;
+    }
+
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+
+});
+
+</script>
 </body>
 </html>
