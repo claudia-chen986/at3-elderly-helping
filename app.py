@@ -1,7 +1,11 @@
 from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import timedelta, datetime
-import calendar
+from datetime import timedelta
+import os
+from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.utils import secure_filename
+from PIL import Image
+import uuid
 
 #authentication imports
 from authentication import (
@@ -30,6 +34,13 @@ app.secret_key = 'Elderly_helping_app_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+UPLOAD_FOLDER = "static/uploads"
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+MAXSIZE = 5 * 1024 * 1024  # 5 MB
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = MAXSIZE
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 db = SQLAlchemy(app)
 
 
@@ -47,13 +58,6 @@ class JournalEntry(db.Model):
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
     time = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-class DailyTask(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    task_name = db.Column(db.String(255), nullable=False)
-    task_date =  db.Column(db.Date,nullable=False)
-    completed = db.Column(db.Boolean, default=False)
 
 with app.app_context():
     db.create_all()
@@ -95,6 +99,31 @@ def validate_session():
 
     return user
 
+def allowed_file(filename):
+
+    if "." not in filename:
+        return False
+
+    extension = filename.rsplit(".",1)[1].lower()
+
+    return extension in ALLOWED_EXTENSIONS
+
+def validate_image(file):
+
+    try:
+        image = Image.open(file)
+        image.verify()
+
+        return True
+
+    except:
+        return False
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_large_file(error):
+
+    return "File too large. Maximum size is 5MB.", 413
+
 @app.route('/homepage')
 def homepage():
 
@@ -108,9 +137,37 @@ def homepage():
     return render_template(
         'homepage.html',
         user=user,
-        journal_entries=journal_entries,
-        csrf_token=session.get('csrf_token')
+        journal_entries=journal_entries
     )
+
+@app.route('/save_journal', methods=['POST'])
+def save_journal():
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    title = request.form['title']
+    content = request.form['content']
+
+    validation_error = validate_journal_entry(
+        title,
+        content
+    )
+
+    if validation_error:
+        return validation_error
+
+    entry = JournalEntry(
+        user_id=user.id,
+        title=title,
+        content=content
+    )
+
+    db.session.add(entry)
+    db.session.commit()
+
+    return redirect(url_for('journal'))
 
 @app.route('/logout')
 def logout():
@@ -133,120 +190,10 @@ def daily_task():
 
     if not user:
         return redirect(url_for('login'))
-    
-    month = request.args.get('month', datetime.now().month, type=int)
-    year = request.args.get('year', datetime.now().year, type=int)
-    day = request.args.get('day', datetime.now().day, type=int)
 
-    calendar_days = calendar.monthcalendar(year, month)
+    return render_template('daily_task.html')
 
-    tasks_query = DailyTask.query.filter_by(user_id=user.id)
 
-    if day:
-        tasks_query = tasks_query.filter(
-            db.extract('day', DailyTask.task_date) == day,
-            db.extract('month', DailyTask.task_date) == month,
-            db.extract('year', DailyTask.task_date) == year
-        )
-
-    tasks = tasks_query.order_by(
-        DailyTask.task_date
-    ).all()
-
-    month_tasks = DailyTask.query.filter_by(user_id=user.id).filter(
-    db.extract('month', DailyTask.task_date) == month,
-    db.extract('year', DailyTask.task_date) == year
-    ).all()
-
-    task_days = [
-    task.task_date.day
-    for task in month_tasks
-    ]
-
-    month_name = calendar.month_name[month]
-
-    return render_template(
-        'daily_task.html',
-        tasks=tasks,
-        calendar_days=calendar_days,
-        task_days=task_days,
-        month=month,
-        year=year,
-        month_name=month_name,
-        selected_day=day,
-        csrf_token=session.get('csrf_token')
-    )
-
-@app.route('/add_task', methods=['POST'])
-def add_task():
-
-    user = validate_session()
-
-    if not user:
-        return redirect(url_for('login'))
-    
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-
-    task_name = request.form['task_name']
-    task_date = datetime.strptime(request.form['task_date'],'%Y-%m-%d').date()
-
-    if not task_name.strip():
-        return "Task name cannot be empty."
-
-    task = DailyTask(
-        user_id=user.id,
-        task_name=task_name,
-        task_date=task_date
-    )
-
-    db.session.add(task)
-    db.session.commit()
-
-    return redirect(url_for('daily_task'))
-
-@app.route('/complete_task/<int:task_id>', methods=['POST'])
-def complete_task(task_id):
-    
-    user = validate_session()
-
-    if not user:
-        return redirect(url_for('login'))
-    
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-
-    task = DailyTask.query.get(task_id)
-
-    if not task or task.user_id != user.id:
-        return "Task not found."
-
-    task.completed = True
-    db.session.commit()
-
-    return redirect(url_for('daily_task'))
-
-@app.route('/delete_task/<int:task_id>', methods=['POST'])
-def delete_task(task_id):
-
-    user = validate_session()
-
-    if not user:
-        return redirect(url_for('login'))
-    
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-
-    task = DailyTask.query.get(task_id)
-
-    if not task or task.user_id != user.id:
-        return "Task not found."
-
-    db.session.delete(task)
-    db.session.commit()
-
-    return redirect(url_for('daily_task'))
- 
 @app.route('/journal')
 def journal():
 
@@ -302,9 +249,6 @@ def delete_journal(entry_id):
 
     if not user:
         return redirect(url_for('login'))
-    
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
 
     entry = JournalEntry.query.get(entry_id)
 

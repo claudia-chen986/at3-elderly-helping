@@ -195,6 +195,22 @@
             background:#D45E5E;
         }
 
+        .upload-btn{
+            display:inline-block;
+            padding:12px 24px;
+            background:#8cc1bf;
+            color:white;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:bold;
+            margin-top:10px;
+            transition:0.3s;
+        }
+
+        .upload-btn:hover{
+            background:#4A9492;
+        }
+
         /* SCROLLBAR */
 
         ::-webkit-scrollbar{
@@ -264,9 +280,9 @@
                         method="POST"
                         onsubmit="return confirm('Are you sure you want to delete this journal entry?');">
 
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"> 
                         
-                        <button
+                    <button
                             type="submit"
                             class="delete-btn">
 
@@ -274,14 +290,24 @@
                         </button>
                     </form>
 
-            <div class="journal-date">
-                {{ entry.time.strftime('%d %b %Y') }}
-            </div>
-
-                    <div class="journal-preview">
-                        {{ entry.content[:100] }}...
-                    </div>
+                <div class="journal-date">
+                    {{ entry.time.strftime('%d %b %Y') }}
                 </div>
+                <div class="journal-preview">
+                    {{ entry.content[:100] }}...
+                </div>
+                <div class="saved-images">
+                    {% for image in entry.images %}
+                        <img 
+                            src="{{ url_for('static', filename='uploads/' + image.filename) }}"
+                            style="
+                                width:100%;
+                                margin-top:10px;
+                                border-radius:15px;
+                            ">
+                    {% endfor %}
+                </div>
+            </div>
             {% endfor %}
 
         </div>
@@ -290,7 +316,7 @@
 
         <div class="editor-panel">
 
-            <form action="/save_journal" method="POST"
+            <form action="/save_journal" method="POST" enctype="multipart/form-data"
                 style="display:flex;
                     flex-direction:column;
                     height:100%;">
@@ -312,6 +338,35 @@
                     required
                 ></textarea>
 
+                <input
+                    type="file"
+                    id="journal_image"
+                    name="journal_image"
+                    accept="image/*"
+                    multiple
+                    hidden
+                >
+
+                <label
+                    for= "journal_image"
+                    class= "upload-btn"
+                >
+                    Choose Image
+                </label>
+
+                <div id="previewContainer"
+                    style="
+                        display:flex;
+                        flex-direction:row;
+                        flex-wrap:wrap;
+                        gap:15px;
+                        margin-top:15px;
+                        max-height:250px;
+                        overflow:auto;
+                        padding:5px;
+                    ">
+                </div>
+
                 <div class="button-row">
 
                     <button class="save-btn" type="submit">
@@ -326,5 +381,51 @@
 
     </div>
 
+<script>
+const input = document.getElementById("journal_image");
+const previewContainer = document.getElementById("previewContainer");
+
+input.addEventListener("change", function () {
+
+    // Make the preview container scrollable (both directions)
+    previewContainer.style.display = "flex";
+    previewContainer.style.flexWrap = "wrap";
+    previewContainer.style.gap = "15px";
+    previewContainer.style.width = "100%";
+    previewContainer.style.maxHeight = "250px";
+    previewContainer.style.overflow = "auto";
+    previewContainer.style.padding = "10px";
+    previewContainer.style.background = "white";
+    previewContainer.style.borderRadius = "20px";
+
+    // Clear old previews
+    previewContainer.innerHTML = "";
+
+    [...this.files].forEach(file => {
+
+        if (!file.type.startsWith("image/")) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+
+            const img = document.createElement("img");
+
+            img.src = e.target.result;
+
+            img.style.width = "140px";
+            img.style.height = "140px";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "15px";
+            img.style.flexShrink = "0";
+
+            previewContainer.appendChild(img);
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+});
+</script>
 </body>
 </html>
