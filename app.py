@@ -3,7 +3,10 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import timedelta, datetime
 import calendar
 import os
-from flask import send_from_directory
+from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.utils import secure_filename
+from PIL import Image
+import uuid
 
 #authentication imports
 from authentication import (
@@ -31,7 +34,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 UPLOAD_FOLDER = "static/uploads"
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+MAXSIZE = 5 * 1024 * 1024  # 5 MB
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = MAXSIZE
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db = SQLAlchemy(app)
@@ -104,6 +110,31 @@ def validate_session():
 
     return user
 
+def allowed_file(filename):
+
+    if "." not in filename:
+        return False
+
+    extension = filename.rsplit(".",1)[1].lower()
+
+    return extension in ALLOWED_EXTENSIONS
+
+def validate_image(file):
+
+    try:
+        image = Image.open(file)
+        image.verify()
+
+        return True
+
+    except:
+        return False
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_large_file(error):
+
+    return "File too large. Maximum size is 5MB.", 413
+
 @app.route('/homepage')
 def homepage():
 
@@ -137,6 +168,8 @@ def save_journal():
 
     if validation_error:
         return validation_error
+    
+    images = request.files.getlist("journal_image")
 
     entry = JournalEntry(
         user_id=user.id,
@@ -146,24 +179,38 @@ def save_journal():
 
     db.session.add(entry)
     db.session.commit()
-    
-    images = request.files.getlist("journal_image")
 
     for image in images:
         if image.filename:
-            filename = image.filename
+
+            if not allowed_file(image.filename):
+                return "Invalid file type."
+
+            if not validate_image(image):
+                return "Uploaded file is not a valid image."
+
+            filename = (
+                str(uuid.uuid4())
+                + "_"
+                + secure_filename(image.filename)
+            )
+
             filepath = os.path.join(
                 app.config["UPLOAD_FOLDER"],
                 filename
             )
+
             image.save(filepath)
+            
+            if image.content_length > MAXSIZE:
+                return "Image too large."
+
             journal_image = JournalImage(
                 journal_id=entry.id,
                 filename=filename
             )
 
-            db.session.add(journal_image)
-
+            db.session.add(journal_image)        
     db.session.commit()
     return redirect(url_for('journal'))
 
