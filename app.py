@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, url_for, session
+from flask import Flask, flash, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import timedelta, datetime
 import calendar
@@ -141,6 +141,7 @@ def homepage():
     user = validate_session()
 
     if not user:
+        flash("Please log in to access the homepage.", "error")
         return redirect(url_for('login'))
 
     journal_entries = JournalEntry.query.filter_by(user_id=user.id).order_by(JournalEntry.time.desc()).all()
@@ -156,6 +157,7 @@ def save_journal():
     user = validate_session()
 
     if not user:
+        flash("Please log in to save a journal entry.", "error")
         return redirect(url_for('login'))
 
     title = request.form['title']
@@ -220,12 +222,14 @@ def delete_journal(entry_id):
     user = validate_session()
 
     if not user:
+        flash("Please log in to delete a journal entry.", "error")
         return redirect(url_for('login'))
 
     entry = JournalEntry.query.get(entry_id)
 
     if not entry or entry.user_id != user.id:
-        return "Journal entry not found."
+        flash("Journal entry not found.", "error")
+        return redirect(url_for('journal'))
 
     db.session.delete(entry)
     db.session.commit()
@@ -252,6 +256,7 @@ def daily_task():
     user = validate_session()
 
     if not user:
+        flash("Please log in to access the daily tasks.", "error")
         return redirect(url_for('login'))
     
     month = request.args.get('month', datetime.now().month, type=int)
@@ -302,6 +307,7 @@ def journal():
     user = validate_session()
 
     if not user:
+        flash("Please log in to access your journal.", "error")
         return redirect(url_for('login'))
 
     journal_entries = JournalEntry.query.filter_by(user_id=user.id).order_by(JournalEntry.time.desc()).all()
@@ -317,13 +323,15 @@ def add_task():
     user = validate_session()
 
     if not user:
+        flash("Please log in to add a task.", "error")
         return redirect(url_for('login'))
 
     task_name = request.form['task_name']
     task_date = datetime.strptime(request.form['task_date'],'%Y-%m-%d').date()
 
     if not task_name.strip():
-        return "Task name cannot be empty."
+        flash("Task name cannot be empty.", "error")
+        return redirect(url_for('daily_task'))
 
     task = DailyTask(
         user_id=user.id,
@@ -342,12 +350,14 @@ def complete_task(task_id):
     user = validate_session()
 
     if not user:
+        flash("Please log in to complete a task.", "error")
         return redirect(url_for('login'))
 
     task = DailyTask.query.get(task_id)
 
     if not task or task.user_id != user.id:
-        return "Task not found."
+        flash("Task not found.", "error")
+        return redirect(url_for('daily_task'))
 
     task.completed = True
     db.session.commit()
@@ -360,12 +370,14 @@ def delete_task(task_id):
     user = validate_session()
 
     if not user:
+        flash("Please log in to delete a task.", "error")
         return redirect(url_for('login'))
 
     task = DailyTask.query.get(task_id)
 
     if not task or task.user_id != user.id:
-        return "Task not found."
+        flash("Task not found.", "error")
+        return redirect(url_for('daily_task'))
 
     db.session.delete(task)
     db.session.commit()
@@ -384,20 +396,24 @@ def signup_user():
     existing_user = User.query.filter_by(email=email).first()
 
     if existing_user:
-        return "Email already registered."
+        flash("Email already registered.", "error")
+        return redirect(url_for('signup'))
 
     if password != confirm_password:
-        return "Password not matching, please check your password."
+        flash("Password not matching, please check your password.", "error")
+        return redirect(url_for('signup'))
 
     # Validate email
     email_error = validate_email(email)
     if email_error:
-        return email_error
+        flash(email_error, "error")
+        return redirect(url_for('signup'))
 
     # Validate password
     password_error = validate_password(password)
     if password_error:
-        return password_error
+        flash(password_error, "error")
+        return redirect(url_for('signup'))
 
     # Hash password
     hashed_password = hash_password(password)
@@ -447,7 +463,8 @@ def login_user():
 
         return redirect(url_for('homepage'))
     
-    return "Invalid email or password"
+    flash("Invalid email or password.", "error")
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':

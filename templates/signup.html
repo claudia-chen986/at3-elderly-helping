@@ -151,6 +151,16 @@
                 width:30%;
             }
         }
+        .flash-message{
+            background:#ffe6e6;
+            border:2px solid #e74c3c;
+            color:#c0392b;
+            padding:12px;
+            margin-bottom:15px;
+            border-radius:8px;
+            text-align:center;
+            font-weight:bold;
+        }
     </style>
 </head>
 
@@ -165,6 +175,16 @@
             <p class="subtitle">
                 Create your account to begin using your elderly care assistant
             </p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
             <form action="/signup_user" method="POST">
 
