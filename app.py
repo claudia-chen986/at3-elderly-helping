@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import timedelta
+from datetime import timedelta, datetime
+import calendar
 import os
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -13,9 +14,7 @@ from authentication import (
     validate_password,
     hash_password,
     verify_password,
-    generate_token,
-    generate_csrf_token,
-    validate_csrf_token
+    generate_token
 )
 
 from journal_validation import validate_journal_entry
@@ -59,26 +58,38 @@ class JournalEntry(db.Model):
     content = db.Column(db.Text, nullable=False)
     time = db.Column(db.DateTime, default=db.func.current_timestamp())
 
+    images = db.relationship(
+        'JournalImage',
+        backref='journal',
+        cascade="all, delete"
+    )
+
+class JournalImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    journal_id = db.Column(db.Integer, db.ForeignKey('journal_entry.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+
+class DailyTask(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    task_name = db.Column(db.String(255), nullable=False)
+    task_date =  db.Column(db.Date,nullable=False)
+    completed = db.Column(db.Boolean, default=False)
+
 with app.app_context():
     db.create_all()
 
 @app.route('/')
 def login():
-    if 'csrf_token' not in session:
-        session['csrf_token'] = generate_csrf_token()
-    return render_template('login.html',csrf_token=session.get('csrf_token'))
+    return render_template('login.html')
 
 @app.route('/signup')
 def signup():
-    if 'csrf_token' not in session:
-        session['csrf_token'] = generate_csrf_token()
-    return render_template('signup.html', csrf_token=session.get('csrf_token'))
+    return render_template('signup.html')
 
 @app.route('/forgot_password')
 def forgot_password():
-    if 'csrf_token' not in session:
-        session['csrf_token'] = generate_csrf_token()
-    return render_template('forgot-password.html', csrf_token=session.get('csrf_token'))
+    return render_template('forgot-password.html')
 
 def validate_session():
 
@@ -157,6 +168,8 @@ def save_journal():
 
     if validation_error:
         return validation_error
+    
+    images = request.files.getlist("journal_image")
 
     entry = JournalEntry(
         user_id=user.id,
@@ -165,6 +178,56 @@ def save_journal():
     )
 
     db.session.add(entry)
+    db.session.commit()
+
+    for image in images:
+        if image.filename:
+
+            if not allowed_file(image.filename):
+                return "Invalid file type."
+
+            if not validate_image(image):
+                return "Uploaded file is not a valid image."
+
+            filename = (
+                str(uuid.uuid4())
+                + "_"
+                + secure_filename(image.filename)
+            )
+
+            filepath = os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                filename
+            )
+
+            image.save(filepath)
+            
+            if image.content_length > MAXSIZE:
+                return "Image too large."
+
+            journal_image = JournalImage(
+                journal_id=entry.id,
+                filename=filename
+            )
+
+            db.session.add(journal_image)        
+    db.session.commit()
+    return redirect(url_for('journal'))
+
+@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
+def delete_journal(entry_id):
+
+    user = validate_session()
+
+    if not user:
+        return redirect(url_for('login'))
+
+    entry = JournalEntry.query.get(entry_id)
+
+    if not entry or entry.user_id != user.id:
+        return "Journal entry not found."
+
+    db.session.delete(entry)
     db.session.commit()
 
     return redirect(url_for('journal'))
@@ -190,10 +253,49 @@ def daily_task():
 
     if not user:
         return redirect(url_for('login'))
+    
+    month = request.args.get('month', datetime.now().month, type=int)
+    year = request.args.get('year', datetime.now().year, type=int)
+    day = request.args.get('day', datetime.now().day, type=int)
 
-    return render_template('daily_task.html')
+    calendar_days = calendar.monthcalendar(year, month)
 
+    tasks_query = DailyTask.query.filter_by(user_id=user.id)
 
+    if day:
+        tasks_query = tasks_query.filter(
+            db.extract('day', DailyTask.task_date) == day,
+            db.extract('month', DailyTask.task_date) == month,
+            db.extract('year', DailyTask.task_date) == year
+        )
+
+    tasks = tasks_query.order_by(
+        DailyTask.task_date
+    ).all()
+
+    month_tasks = DailyTask.query.filter_by(user_id=user.id).filter(
+    db.extract('month', DailyTask.task_date) == month,
+    db.extract('year', DailyTask.task_date) == year
+    ).all()
+
+    task_days = [
+    task.task_date.day
+    for task in month_tasks
+    ]
+
+    month_name = calendar.month_name[month]
+
+    return render_template(
+        'daily_task.html',
+        tasks=tasks,
+        calendar_days=calendar_days,
+        task_days=task_days,
+        month=month,
+        year=year,
+        month_name=month_name,
+        selected_day=day
+    )
+ 
 @app.route('/journal')
 def journal():
 
@@ -206,67 +308,15 @@ def journal():
 
     return render_template(
         'journal.html',
-        journal_entries=journal_entries,
-        csrf_token=session.get('csrf_token')
+        journal_entries=journal_entries
     )
 
-@app.route('/save_journal', methods=['POST'])
-def save_journal():
-    user = validate_session()
 
-    if not user:
-        return redirect(url_for('login'))
-    
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-
-    title = request.form['title']
-    content = request.form['content']
-
-    validation_error = validate_journal_entry(
-        title,
-        content
-    )
-
-    if validation_error:
-        return validation_error
-
-    entry = JournalEntry(
-        user_id=user.id,
-        title=title,
-        content=content
-    )
-
-    db.session.add(entry)
-    db.session.commit()
-
-    return redirect(url_for('journal'))
-
-@app.route('/delete_journal/<int:entry_id>', methods=['POST'])
-def delete_journal(entry_id):
-
-    user = validate_session()
-
-    if not user:
-        return redirect(url_for('login'))
-
-    entry = JournalEntry.query.get(entry_id)
-
-    if not entry or entry.user_id != user.id:
-        return "Journal entry not found."
-
-    db.session.delete(entry)
-    db.session.commit()
-
-    return redirect(url_for('journal'))
 
 #sign up user route
 @app.route('/signup_user', methods=['POST'])
 def signup_user():
 
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-    
     name = request.form['fullname']
     email = request.form['email']
     password = request.form['password']
@@ -312,7 +362,6 @@ def signup_user():
 
     session['user_id'] = user.id
     session['session_token'] = token
-    session['csrf_token'] = generate_csrf_token()
 
     return redirect(url_for('homepage'))
     
@@ -320,9 +369,6 @@ def signup_user():
 @app.route('/login_user', methods=['POST'])
 def login_user():
 
-    if not validate_csrf_token(request.form.get('csrf_token')):
-        return "Invalid CSRF token.", 403
-    
     email = request.form['email']
     password = request.form['password']
 
@@ -339,7 +385,6 @@ def login_user():
 
         session['user_id'] = user.id
         session['session_token'] = token
-        session['csrf_token'] = generate_csrf_token()
 
         return redirect(url_for('homepage'))
     
