@@ -322,7 +322,39 @@
                 min-height:70px;
             }
         }
+        
+        /* SUGGESTED TASKS */
+        .suggestions-container{
+            margin-top:20px;
+        }
 
+        .suggestions-title{
+            color:#1F4E5F;
+            margin-bottom:10px;
+            font-size:18px;
+        }
+
+        .suggestions{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            max-height:120px;
+            overflow-y:auto;
+        }
+
+        .suggestion-btn{
+            padding:10px 18px;
+            border:none;
+            border-radius:12px;
+            background:#DCEEEE;
+            cursor:pointer;
+            transition:0.25s;
+        }
+
+        .suggestion-btn:hover{
+            background:#8CC1BF;
+            color:white;
+        }
     </style>
 </head>
 
@@ -363,6 +395,7 @@
                 <input
                     type="text"
                     name="task_name"
+                    id="task_name"
                     class="task-input"
                     placeholder="Task Name"
                     required
@@ -374,6 +407,27 @@
                     class="task-date"
                     required
                 >
+
+                <!-- Suggested Tasks -->
+
+                <div class="suggestions-container">
+
+                    <h3 class="suggestions-title">
+                        Suggested Tasks
+                    </h3>
+
+                    <div class="suggestions">
+                        {% for task in suggested_tasks %}
+                            <button
+                                type="button"
+                                class="suggestion-btn">
+
+                                {{ task }}
+                                
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
 
                 <button
                     type="submit"
@@ -494,5 +548,20 @@
             </div>
         </div>
     </div>
+
+<script>
+const taskInput = document.getElementById("task_name");
+const buttons = document.querySelectorAll(".suggestion-btn");
+
+buttons.forEach(button => {
+
+    button.addEventListener("click", function(){
+
+        taskInput.value = this.textContent;
+
+    });
+
+});
+</script>
 </body>
 </html>

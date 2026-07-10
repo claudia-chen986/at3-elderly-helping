@@ -1,5 +1,6 @@
 from flask import Flask, flash, redirect, render_template, request, url_for, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from datetime import timedelta, datetime
 import calendar
 import os
@@ -7,6 +8,8 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from PIL import Image
 import uuid
+from task_categories import TASK_CATEGORIES
+from collections import Counter
 
 #authentication imports
 from authentication import (
@@ -134,6 +137,16 @@ def validate_image(file):
 def handle_large_file(error):
 
     return "File too large. Maximum size is 5MB.", 413
+
+def find_category(task_name):
+
+    task = task_name.lower()
+    for category, keywords in TASK_CATEGORIES.items():
+        for keyword in keywords:
+            if keyword in task:
+                return category
+            
+    return None
 
 @app.route('/homepage')
 def homepage():
@@ -290,6 +303,30 @@ def daily_task():
 
     month_name = calendar.month_name[month]
 
+    previous_tasks = DailyTask.query.filter_by(
+        user_id=user.id
+    ).all()
+
+    category_counter = Counter()
+    category_examples = {}
+
+    for task in previous_tasks:
+        category = find_category(task.task_name)
+
+        if category is None:
+            category = task.task_name
+
+        category_counter[category] += 1
+        
+        if category not in category_examples:
+            category_examples[category] = task.task_name
+
+    sorted_categories = category_counter.most_common(5)
+    suggested_tasks = []
+    
+    for category, count in sorted_categories:
+        suggested_tasks.append(category_examples[category])
+        
     return render_template(
         'daily_task.html',
         tasks=tasks,
@@ -298,7 +335,8 @@ def daily_task():
         month=month,
         year=year,
         month_name=month_name,
-        selected_day=day
+        selected_day=day,
+        suggested_tasks=suggested_tasks
     )
  
 @app.route('/journal')
