@@ -208,3 +208,6 @@ __marimo__/
 
 # Ignore everything in static
 static/uploads/
+
+# Ignore everything in features
+features/**
